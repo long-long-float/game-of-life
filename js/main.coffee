@@ -80,9 +80,15 @@ $ ->
 
   clicked = false
 
+  putCell = (e, $canvas) ->
+    {top, left} = $canvas.offset()
+    x = Math.floor((e.clientY - top) / CELLSIZE)
+    y = Math.floor((e.clientX - left) / CELLSIZE)
+    field[x][y] = CellType.Life
+
   $('#canvas').game(
-    width: 200
-    height: 200
+    width: 500
+    height: 500
     fps: 30
     oninit: (canvas) ->
       for i in [0...@height / CELLSIZE]
@@ -92,7 +98,7 @@ $ ->
       
       l = CellType.Life
       d = CellType.Die
-      copyMat(field, 15, 15, [
+      copyMat(field, 47, 47, [
         [l, l, l]
         [l, d, d]
         [d, l, d]
@@ -123,10 +129,9 @@ $ ->
       clicked = true
     .mouseup ->
       clicked = false
+    .click (e) ->
+      putCell(e, $(this))
     .mousemove ((e) ->
       if clicked
-        {top, left} = $(this).offset()
-        x = Math.floor((e.clientY - top) / CELLSIZE)
-        y = Math.floor((e.clientX - left) / CELLSIZE)
-        field[x][y] = CellType.Life
+        putCell(e, $(this))
     )
