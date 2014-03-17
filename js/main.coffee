@@ -7,14 +7,10 @@
           fps: 30
           oninit: (canvas) ->
           onframe: (canvas) ->
-          onclick: (event) ->
         }, opt
       @canvas = $canvas
         .attr('width', @opt.width).attr('height', @opt.height)
         .get(0).getContext('2d')
-
-      $canvas.click (e) ->
-        @opt.onclick(e)
 
       @opt.oninit()
 
@@ -47,6 +43,8 @@
         game = new Game(opt, $(this))
         game.start()
 
+    $(this).get(0).game = game
+
     return $(this)
 )(jQuery)
 
@@ -72,51 +70,63 @@ $ ->
       for cell, x in row
         mat1[sy + y][sx + x] = cell
 
-  $('#start-btn').click ->
-    $('#canvas').game('start')
+  stopped = false
 
-  $('#stop-btn').click ->
-    $('#canvas').game('stop')
+  $('#controll-btn').click ->
+    stopped = !stopped
+    $(this).val(if stopped then 'Start' else 'Stop')
+
+  field = []
+
+  clicked = false
 
   $('#canvas').game(
     width: 200
     height: 200
     fps: 30
     oninit: (canvas) ->
-      @field = []
       for i in [0...@height / CELLSIZE]
-        @field.push []
+        field.push []
         for j in [0...@width / CELLSIZE]
-          @field[i].push CellType.Die
+          field[i].push CellType.Die
       
       l = CellType.Life
       d = CellType.Die
-      copyMat(@field, 15, 15, [
+      copyMat(field, 15, 15, [
         [l, l, l]
         [l, d, d]
         [d, l, d]
         ])
     onframe: (canvas) ->
-      for row, y in @field
+      for row, y in field
         for cell, x in row
           if cell == CellType.Life
             canvas.fillRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
 
-      que = []
-      for row, y in @field
-        for cell, x in row
-          count = countAround(@field, x, y, CellType.Life)
-          if x == 1 and y == 1
-            console.log
-          switch cell
-            when CellType.Life
-              if count <= 1 or count >= 4
-                que.push [y, x, CellType.Die]
-            when CellType.Die
-              if count == 3
-                que.push [y, x, CellType.Life]
-      for ope in que
-        @field[ope[0]][ope[1]] = ope[2]
-    onclick: (e) ->
-      @field[Math.floor(e.clientY / CELLSIZE)][Math.floor(e.clientX / CELLSIZE)] = CellType.Life
+      unless stopped
+        que = []
+        for row, y in field
+          for cell, x in row
+            count = countAround(field, x, y, CellType.Life)
+            if x == 1 and y == 1
+              console.log
+            switch cell
+              when CellType.Life
+                if count <= 1 or count >= 4
+                  que.push [y, x, CellType.Die]
+              when CellType.Die
+                if count == 3
+                  que.push [y, x, CellType.Life]
+        for ope in que
+          field[ope[0]][ope[1]] = ope[2]
+    ).mousedown ->
+      clicked = true
+    .mouseup ->
+      clicked = false
+    .mousemove ((e) ->
+      if clicked
+        {top, left} = $(this).offset()
+        x = Math.floor((e.clientY - top) / CELLSIZE)
+        y = Math.floor((e.clientX - left) / CELLSIZE)
+        field[x][y] = CellType.Life
     )
