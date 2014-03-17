@@ -1,25 +1,51 @@
 (($) ->
+  class Game
+    constructor: (opt, $canvas) ->
+      @opt = $.extend {
+          width: 100
+          height: 100
+          fps: 30
+          oninit: (canvas) ->
+          onframe: (canvas) ->
+          onclick: (event) ->
+        }, opt
+      @canvas = $canvas
+        .attr('width', @opt.width).attr('height', @opt.height)
+        .get(0).getContext('2d')
+
+      $canvas.click (e) ->
+        @opt.onclick(e)
+
+      @opt.oninit()
+
+    start: ->
+      return if @intervalID
+
+      @intervalID = setInterval (=>
+        old = @canvas.fillStyle
+        @canvas.fillStyle = '#fff'
+        @canvas.fillRect(0, 0, @opt.width, @opt.height)
+        @canvas.fillStyle = old
+        @opt.onframe(@canvas)
+        ), 1000.0 / @opt.fps
+
+    stop: ->
+      return unless @intervalID
+
+      clearInterval(@intervalID)
+      @intervalID = null
+
+  game = null
+
   $.fn.game = (opt) ->
-    opt = $.extend {
-        width: 100
-        height: 100
-        fps: 30
-        oninit: ->
-        onframe: ->
-      }, opt
-    canvas = $(this)
-      .attr('width', opt.width).attr('height', opt.height)
-      .get(0).getContext('2d')
-
-    opt.oninit(canvas, opt)
-
-    setInterval (->
-      old = canvas.fillStyle
-      canvas.fillStyle = '#fff'
-      canvas.fillRect(0, 0, opt.width, opt.height)
-      canvas.fillStyle = old
-      opt.onframe(canvas, opt)
-    ), 1000.0 / opt.fps
+    switch opt
+      when 'start'
+        game.start()
+      when 'stop'
+        game.stop()
+      else
+        game = new Game(opt, $(this))
+        game.start()
 
     return $(this)
 )(jQuery)
@@ -46,21 +72,21 @@ $ ->
       for cell, x in row
         mat1[sy + y][sx + x] = cell
 
-  console.log countAround([
-    [0, 1, 1]
-    [0, 0, 0]
-    [0, 0, 1]
-    ], 0, 0)
+  $('#start-btn').click ->
+    $('#canvas').game('start')
 
-  $('#canvas').game
+  $('#stop-btn').click ->
+    $('#canvas').game('stop')
+
+  $('#canvas').game(
     width: 200
     height: 200
     fps: 30
-    oninit: (canvas, opt) ->
+    oninit: (canvas) ->
       @field = []
-      for i in [0...opt.height / CELLSIZE]
+      for i in [0...@height / CELLSIZE]
         @field.push []
-        for j in [0...opt.width / CELLSIZE]
+        for j in [0...@width / CELLSIZE]
           @field[i].push CellType.Die
       
       l = CellType.Life
@@ -70,7 +96,6 @@ $ ->
         [l, d, d]
         [d, l, d]
         ])
-      console.log JSON.stringify(@field)
     onframe: (canvas) ->
       for row, y in @field
         for cell, x in row
@@ -92,3 +117,6 @@ $ ->
                 que.push [y, x, CellType.Life]
       for ope in que
         @field[ope[0]][ope[1]] = ope[2]
+    onclick: (e) ->
+      @field[Math.floor(e.clientY / CELLSIZE)][Math.floor(e.clientX / CELLSIZE)] = CellType.Life
+    )
