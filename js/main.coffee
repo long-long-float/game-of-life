@@ -84,7 +84,7 @@ $ ->
     {top, left} = $canvas.offset()
     x = Math.floor((e.clientY - top) / CELLSIZE)
     y = Math.floor((e.clientX - left) / CELLSIZE)
-    field[x][y] = CellType.Life
+    field[x][y] = { 1: CellType.Life, 3: CellType.Die }[e.which]
 
   $('#canvas').game(
     width: 500
@@ -106,6 +106,8 @@ $ ->
     onframe: (canvas) ->
       for row, y in field
         for cell, x in row
+          canvas.strokeStyle = '#c9c9c9'
+          canvas.strokeRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
           if cell == CellType.Life
             canvas.fillRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
 
