@@ -5,6 +5,7 @@
           width: 100
           height: 100
           fps: 30
+          background: '#fff'
           oninit: (canvas) ->
           onframe: (canvas) ->
         }, opt
@@ -19,7 +20,7 @@
 
       @intervalID = setInterval (=>
         old = @canvas.fillStyle
-        @canvas.fillStyle = '#fff'
+        @canvas.fillStyle = @opt.background
         @canvas.fillRect(0, 0, @opt.width, @opt.height)
         @canvas.fillStyle = old
         @opt.onframe(@canvas)
@@ -89,7 +90,8 @@ $ ->
   $('#canvas').game(
     width: 500
     height: 500
-    fps: 30
+    fps: 2
+    background: '#000'
     oninit: (canvas) ->
       for i in [0...@height / CELLSIZE]
         field.push []
@@ -106,9 +108,10 @@ $ ->
     onframe: (canvas) ->
       for row, y in field
         for cell, x in row
-          canvas.strokeStyle = '#c9c9c9'
+          canvas.strokeStyle = '#005500' #'#c9c9c9'
           canvas.strokeRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
           if cell == CellType.Life
+            canvas.fillStyle = '#00ff00'
             canvas.fillRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
 
       unless stopped
