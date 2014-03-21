@@ -1,0 +1,9 @@
+{
+  "name": "game-of-file",
+  "version": "0.0.1",
+  "author": "long_long_float",
+  "dependencies": {
+    "coffee-script": "~1.7.1",
+    "bower": "~1.3.1"
+  }
+}
