@@ -51,20 +51,29 @@
 
 $ ->
   CELLSIZE = 10
-  CellType = {
-    Die: 0
-    Life: 1
-  }
+  CELL_DIE = 0
+  Cell2Color = [
+    null #die
+    '#00ff00' #green
+    '#ff0000' #red
+    '#0000ff' #blue
+  ]
 
-  countAround = (mat, cx, cy, val) ->
-    ret = 0
+  countsAround = (mat, cx, cy) ->
+    ret = {}
     for y in [cy - 1..cy + 1]
       continue unless 0 <= y < mat.length
       for x in [cx - 1..cx + 1]
         continue unless 0 <= x < mat[y].length
         continue if x == cx and y == cy
-        ret++ if mat[y][x] == val
+
+        current = mat[y][x]
+        ret[current] ||= 0
+        ret[current]++
     return ret
+
+  countAround = (mat, cx, cy, val) ->
+    countsAround(mat, cx, cy)[val] ? 0
 
   copyMat = (mat1, sx, sy, mat2) ->
     for row, y in mat2
@@ -81,11 +90,17 @@ $ ->
 
   clicked = false
 
+  console.log countsAround([
+    [3, 2, 1]
+    [1, 2, 3]
+    [2, 2, 3]
+    ], 1, 1)
+
   putCell = (e, $canvas) ->
     {top, left} = $canvas.offset()
     x = Math.floor((e.clientY - top) / CELLSIZE)
     y = Math.floor((e.clientX - left) / CELLSIZE)
-    field[x][y] = { 1: CellType.Life, 3: CellType.Die }[e.which]
+    field[x][y] = { 1: 1, 3: CELL_DIE }[e.which]
 
   $('#canvas').game(
     width: 500
@@ -96,21 +111,14 @@ $ ->
       for i in [0...@height / CELLSIZE]
         field.push []
         for j in [0...@width / CELLSIZE]
-          field[i].push CellType.Die
+          field[i].push CELL_DIE
       
-      l = CellType.Life
-      d = CellType.Die
-      copyMat(field, 47, 47, [
-        [l, l, l]
-        [l, d, d]
-        [d, l, d]
-        ])
     onframe: (canvas) ->
       for row, y in field
         for cell, x in row
-          canvas.strokeStyle = '#005500' #'#c9c9c9'
+          canvas.strokeStyle = '#005500'
           canvas.strokeRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
-          if cell == CellType.Life
+          if cell != CELL_DIE
             canvas.fillStyle = '#00ff00'
             canvas.fillRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
 
@@ -118,16 +126,15 @@ $ ->
         que = []
         for row, y in field
           for cell, x in row
-            count = countAround(field, x, y, CellType.Life)
-            if x == 1 and y == 1
-              console.log
-            switch cell
-              when CellType.Life
-                if count <= 1 or count >= 4
-                  que.push [y, x, CellType.Die]
-              when CellType.Die
+            if cell != CELL_DIE #live cell
+              count = countAround(field, x, y, cell)
+              if count <= 1 or count >= 4
+                que.push [y, x, CELL_DIE]
+            else #die cell
+              counts = countsAround(field, x, y)
+              for cel, count of counts
                 if count == 3
-                  que.push [y, x, CellType.Life]
+                  que.push [y, x, parseInt(cel)]
         for ope in que
           field[ope[0]][ope[1]] = ope[2]
     ).mousedown ->
@@ -136,7 +143,9 @@ $ ->
       clicked = false
     .click (e) ->
       putCell(e, $(this))
-    .mousemove ((e) ->
+    .mousemove (e) ->
       if clicked
         putCell(e, $(this))
-    )
+    .bind 'contextmenu', (e) ->
+      putCell(e, $(this))
+      return false
