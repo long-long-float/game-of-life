@@ -82,6 +82,14 @@ $ ->
   countAround = (mat, cx, cy, val) ->
     countsAround(mat, cx, cy)[val] ? 0
 
+  cellCounts = (mat) ->
+    ret = {}
+    for row in mat
+      for cell in row
+        ret[cell] ||= 0
+        ret[cell]++
+    return ret
+
   copyMat = (mat1, sx, sy, mat2) ->
     for row, y in mat2
       for cell, x in row
@@ -151,6 +159,10 @@ $ ->
         @count ||= 0
         $('#age').text(@count)
         @count++
+
+        counts = cellCounts(field)
+        for color, i in ['green', 'red', 'blue']
+          $("##{color}-count").text(counts[(i + 1).toString()] ? 0)
     )
     .mousedown ->
       clicked = true
