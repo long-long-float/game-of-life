@@ -103,6 +103,12 @@ $ ->
     y = Math.floor((e.clientX - left) / CELLSIZE)
     field[x][y] = { 1: parseInt($('#color-select').val()), 3: CELL_DIE }[e.which]
 
+  fps = 0
+  updateFps = ->
+    fps = parseInt($('#fps-input').val())
+    $('#fps').text(fps)
+  updateFps()
+
   $('#canvas').game(
     width: 500
     height: 500
@@ -125,7 +131,7 @@ $ ->
             canvas.fillRect(x * CELLSIZE, y * CELLSIZE, CELLSIZE, CELLSIZE)
 
       #update
-      if @age % 15 == 0
+      if @age % (31 - fps) == 0
         return if stopped
         que = []
         for row, y in field
@@ -141,7 +147,10 @@ $ ->
                   que.push [y, x, parseInt(cel)]
         for ope in que
           field[ope[0]][ope[1]] = ope[2]
-        $('#age').text(@age / 15)
+
+        @count ||= 0
+        $('#age').text(@count)
+        @count++
     )
     .mousedown ->
       clicked = true
@@ -155,3 +164,6 @@ $ ->
     .bind 'contextmenu', (e) ->
       putCell(e, $(this))
       return false
+
+  $('#fps-input').change ->
+    updateFps()
